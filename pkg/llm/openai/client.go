@@ -259,6 +259,9 @@ func (c *OpenAIClient) Generate(ctx context.Context, prompt string, options ...i
 			"reasoning":         reasoningMode,
 		})
 
+		// Debug: Print full HTTP request details
+		c.debugHTTPRequest(ctx, "Generate", req)
+
 		resp, err = c.ChatService.Completions.New(ctx, req)
 		if err != nil {
 			c.logger.Error(ctx, "Error from OpenAI API", map[string]interface{}{
@@ -407,6 +410,9 @@ func (c *OpenAIClient) Chat(ctx context.Context, messages []llm.Message, params 
 			"messages":          len(req.Messages),
 			"reasoning":         params.Reasoning,
 		})
+
+		// Debug: Print full HTTP request details
+		c.debugHTTPRequest(ctx, "Chat", req)
 
 		resp, err = c.ChatService.Completions.New(ctx, req)
 		if err != nil {
@@ -640,6 +646,9 @@ func (c *OpenAIClient) GenerateWithTools(ctx context.Context, prompt string, too
 			"iteration":         iteration + 1,
 			"maxIterations":     maxIterations,
 		})
+
+		// Debug: Print full HTTP request details
+		c.debugHTTPRequest(ctx, "GenerateWithTools", req)
 		resp, err := c.ChatService.Completions.New(ctx, req)
 		if err != nil {
 			c.logger.Error(ctx, "Error from OpenAI API", map[string]interface{}{"error": err.Error()})
@@ -848,10 +857,10 @@ func (c *OpenAIClient) GenerateWithTools(ctx context.Context, prompt string, too
 					"toolcall": toolCall,
 					"resp":     resp,
 				})
-				
+
 				// Add tool not found error as tool result instead of returning
 				errorMessage := fmt.Sprintf("Error: tool not found: %s", toolCall.Function.Name)
-				
+
 				// Store failed tool call in memory if provided
 				if params.Memory != nil {
 					_ = params.Memory.AddMessage(ctx, interfaces.Message{
@@ -872,7 +881,7 @@ func (c *OpenAIClient) GenerateWithTools(ctx context.Context, prompt string, too
 						},
 					})
 				}
-				
+
 				// Add to tracing context
 				toolCallTrace := tracing.ToolCall{
 					Name:       toolCall.Function.Name,
@@ -885,12 +894,12 @@ func (c *OpenAIClient) GenerateWithTools(ctx context.Context, prompt string, too
 					Error:      fmt.Sprintf("tool not found: %s", toolCall.Function.Name),
 					Result:     errorMessage,
 				}
-				
+
 				tracing.AddToolCallToContext(ctx, toolCallTrace)
-				
+
 				// Add error message as tool response
 				messages = append(messages, openai.ToolMessage(errorMessage, toolCall.ID))
-				
+
 				continue // Continue processing other tool calls
 			}
 
@@ -1043,6 +1052,9 @@ func (c *OpenAIClient) GenerateWithTools(ctx context.Context, prompt string, too
 		"messages": len(finalReq.Messages),
 	})
 
+	// Debug: Print full HTTP request details for final call
+	c.debugHTTPRequest(ctx, "FinalCall", finalReq)
+
 	finalResp, err := c.ChatService.Completions.New(ctx, finalReq)
 	if err != nil {
 		c.logger.Error(ctx, "Error in final call without tools", map[string]interface{}{"error": err.Error()})
@@ -1132,4 +1144,37 @@ func WithReasoning(reasoning string) interfaces.GenerateOption {
 		}
 		options.LLMConfig.Reasoning = reasoning
 	}
+}
+
+// debugHTTPRequest logs the full HTTP request details including headers and body
+func (c *OpenAIClient) debugHTTPRequest(ctx context.Context, operation string, req interface{}) {
+	// Marshal the request to JSON for debugging
+	reqJSON, err := json.MarshalIndent(req, "", "  ")
+	if err != nil {
+		c.logger.Error(ctx, "Failed to marshal request for debugging", map[string]interface{}{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	// Log HTTP request details
+	c.logger.Debug(ctx, "Full HTTP Request Details", map[string]interface{}{
+		"operation": operation,
+		"method":    "POST",
+		"url":       c.baseURL + "/chat/completions",
+		"headers": map[string]string{
+			"Content-Type":  "application/json",
+			"Authorization": "Bearer " + c.maskAPIKey(),
+			"User-Agent":    "agent-sdk-go",
+		},
+		"body": string(reqJSON),
+	})
+}
+
+// maskAPIKey returns a masked version of the API key for logging
+func (c *OpenAIClient) maskAPIKey() string {
+	if len(c.apiKey) <= 8 {
+		return "***"
+	}
+	return c.apiKey[:4] + "***" + c.apiKey[len(c.apiKey)-4:]
 }
