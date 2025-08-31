@@ -1,33 +1,14 @@
-package openai
+package oaic
 
 import (
-	"strings"
-
 	"github.com/Ingenimax/agent-sdk-go/pkg/interfaces"
 	"github.com/Ingenimax/agent-sdk-go/pkg/llm/openai_base"
 	"github.com/Ingenimax/agent-sdk-go/pkg/logging"
 	"github.com/Ingenimax/agent-sdk-go/pkg/retry"
 )
 
-type OpenAIClient struct {
+type OpenAICompatibleClient struct {
 	openai_base.OpenAIBaseClient
-}
-
-// isReasoningModel returns true if the model is a reasoning model that requires temperature = 1
-func isReasoningModel(model string) bool {
-	reasoningModels := []string{
-		"o1-", "o1-mini", "o1-preview",
-		"o3-", "o3-mini",
-		"o4-", "o4-mini",
-		"gpt-5", "gpt-5-mini", "gpt-5-nano",
-	}
-
-	for _, prefix := range reasoningModels {
-		if strings.HasPrefix(model, prefix) {
-			return true
-		}
-	}
-	return false
 }
 
 // WithModel sets the model for the OpenAI client
@@ -41,11 +22,9 @@ func WithLogger(logger logging.Logger) openai_base.Option {
 }
 
 // NewClient creates a new OpenAI client
-func NewClient(apiKey string, options ...openai_base.Option) *OpenAIClient {
-	client := openai_base.NewClient(apiKey, options...)
-	openai_base.WithReasoningCapabilities(isReasoningModel(client.Model))(client)
-	return &OpenAIClient{
-		OpenAIBaseClient: *client,
+func NewClient(apiKey string, options ...openai_base.Option) *OpenAICompatibleClient {
+	return &OpenAICompatibleClient{
+		OpenAIBaseClient: *openai_base.NewClient(apiKey, options...),
 	}
 }
 

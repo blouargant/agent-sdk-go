@@ -1,4 +1,4 @@
-package openai_test
+package openai_base_test
 
 import (
 	"context"
@@ -10,8 +10,7 @@ import (
 
 	"github.com/Ingenimax/agent-sdk-go/pkg/interfaces"
 	"github.com/Ingenimax/agent-sdk-go/pkg/llm"
-	openai_client "github.com/Ingenimax/agent-sdk-go/pkg/llm/openai"
-	"github.com/Ingenimax/agent-sdk-go/pkg/llm/openai_base"
+	openai_client "github.com/Ingenimax/agent-sdk-go/pkg/llm/openai_base"
 	"github.com/Ingenimax/agent-sdk-go/pkg/logging"
 	"github.com/openai/openai-go/v2"
 	"github.com/openai/openai-go/v2/option"
@@ -56,8 +55,8 @@ func TestGenerate(t *testing.T) {
 	// Create our wrapper client with a logger
 	logger := logging.New()
 	client := openai_client.NewClient("test-key",
-		openai_base.WithModel("gpt-4"),
-		openai_base.WithLogger(logger),
+		openai_client.WithModel("gpt-4"),
+		openai_client.WithLogger(logger),
 	)
 
 	// Override the client to use our test server
@@ -119,8 +118,8 @@ func TestChat(t *testing.T) {
 	// Create our wrapper client with a logger
 	logger := logging.New()
 	client := openai_client.NewClient("test-key",
-		openai_base.WithModel("gpt-4"),
-		openai_base.WithLogger(logger),
+		openai_client.WithModel("gpt-4"),
+		openai_client.WithLogger(logger),
 	)
 
 	// Override the client to use our test server

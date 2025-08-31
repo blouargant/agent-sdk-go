@@ -1,4 +1,4 @@
-package openai_test
+package oaic_test
 
 import (
 	"context"
@@ -10,7 +10,7 @@ import (
 
 	"github.com/Ingenimax/agent-sdk-go/pkg/interfaces"
 	"github.com/Ingenimax/agent-sdk-go/pkg/llm"
-	openai_client "github.com/Ingenimax/agent-sdk-go/pkg/llm/openai"
+	openai_client "github.com/Ingenimax/agent-sdk-go/pkg/llm/oaic"
 	"github.com/Ingenimax/agent-sdk-go/pkg/llm/openai_base"
 	"github.com/Ingenimax/agent-sdk-go/pkg/logging"
 	"github.com/openai/openai-go/v2"
