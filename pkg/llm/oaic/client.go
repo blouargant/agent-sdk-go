@@ -21,6 +21,15 @@ func WithLogger(logger logging.Logger) openai_base.Option {
 	return openai_base.WithLogger(logger)
 }
 
+// WithBaseURL sets the base URL for the OpenAI client
+func WithBaseURL(baseURL string) openai_base.Option {
+	return openai_base.WithBaseURL(baseURL)
+}
+
+func WithReasoningCapabilities(reasoning bool) openai_base.Option {
+	return openai_base.WithReasoningCapabilities(reasoning)
+}
+
 // NewClient creates a new OpenAI client
 func NewClient(apiKey string, options ...openai_base.Option) *OpenAICompatibleClient {
 	return &OpenAICompatibleClient{
